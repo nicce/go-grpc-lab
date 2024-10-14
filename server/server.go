@@ -1,10 +1,12 @@
 package server
 
 import (
-	"github.com/nicce/go-grpc-lab/api/customerpb"
-	"github.com/nicce/go-grpc-lab/api/customers"
 	"log"
 	"net"
+
+	customerpb2 "github.com/nicce/go-grpc-lab/customerpb"
+	"github.com/nicce/go-grpc-lab/customers"
+	"github.com/nicce/go-grpc-lab/provider/customer"
 
 	"google.golang.org/grpc"
 )
@@ -17,8 +19,9 @@ type Server struct {
 
 // Config for the server.
 type Config struct {
-	Port      string
-	Customers []*customerpb.GetCustomerResponse
+	Port                   string
+	Customers              []*customers.Customer
+	MaxDelayInMilliseconds int
 }
 
 // New creates a new server.
@@ -28,9 +31,11 @@ func New(cfg Config) *Server {
 		log.Fatalf("Error starting server: %v", err)
 	}
 
+	customerProvider := customer.New(cfg.Customers, cfg.MaxDelayInMilliseconds)
+
 	grpcServer := grpc.NewServer()
-	customerService := customers.New(cfg.Customers)
-	customerpb.RegisterCustomerServiceServer(grpcServer, customerService)
+	customerService := customers.New(customerProvider)
+	customerpb2.RegisterCustomerServiceServer(grpcServer, customerService)
 
 	return &Server{
 		grpcServer: grpcServer,

@@ -1,45 +1,47 @@
 package main
 
 import (
-	"github.com/nicce/go-grpc-lab/api/customerpb"
-	"github.com/nicce/go-grpc-lab/api/server"
+	"context"
 	"log"
-	"os"
+
+	"github.com/nicce/go-grpc-lab/customers"
+	"github.com/nicce/go-grpc-lab/environment"
+	"github.com/nicce/go-grpc-lab/server"
 
 	"github.com/brianvoe/gofakeit/v7"
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	ctx := context.Background()
+	env := environment.GetEnvironment(ctx)
 
-	s := server.New(server.Config{Port: port, Customers: getMockCustomers()})
+	log.Printf("Starting server with cfg: %+v\n", env)
+
+	s := server.New(server.Config{Port: env.Port, Customers: getMockCustomers(env.NumberOfCustomers), MaxDelayInMilliseconds: env.MaxDelayInMilliseconds})
 	if err := s.Serve(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func getMockCustomers() []*customerpb.GetCustomerResponse {
+func getMockCustomers(nbrOfCustomers int) []*customers.Customer {
 	faker := gofakeit.New(0)
-	customers := make([]*customerpb.GetCustomerResponse, 0)
+	c := make([]*customers.Customer, 0)
 
-	for i := 0; i < 100; i++ {
-		customer := &customerpb.GetCustomerResponse{
-			Id:    faker.UUID(),
+	for i := 0; i < nbrOfCustomers; i++ {
+		customer := &customers.Customer{
+			ID:    faker.UUID(),
 			Name:  faker.Name(),
 			Email: faker.Email(),
 			Phone: faker.Phone(),
-			Address: &customerpb.AddressResponse{
+			Address: customers.Address{
 				Street: faker.Street(),
 				City:   faker.City(),
 				State:  faker.State(),
 				Zip:    faker.Zip(),
 			},
 		}
-		customers = append(customers, customer)
+		c = append(c, customer)
 	}
 
-	return customers
+	return c
 }

@@ -2,24 +2,29 @@ package customers
 
 import (
 	"context"
-	"github.com/nicce/go-grpc-lab/api/customerpb"
+
+	"github.com/nicce/go-grpc-lab/customerpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Service a customer service.
 type Service struct {
-	provider CustomerProvider
+	provider provider
 	customerpb.UnimplementedCustomerServiceServer
 }
 
+// Customer describes the Customer struct.
 type Customer struct {
-	Id      string
+	ID      string
 	Name    string
 	Email   string
 	Phone   string
 	Address Address
 }
 
+// Address describes the Address struct.
 type Address struct {
 	Street string
 	City   string
@@ -27,13 +32,13 @@ type Address struct {
 	Zip    string
 }
 
-type CustomerProvider interface {
-	GetCustomer(ctx context.Context, id string) (Customer, error)
-	ListCustomers(ctx context.Context, ids []string) chan Customer
+type provider interface {
+	GetCustomer(ctx context.Context, id string) (*Customer, error)
+	StreamCustomers(ctx context.Context, ids []string) (<-chan *Customer, error)
 }
 
 // New creates a new customer service.
-func New(provider CustomerProvider) *Service {
+func New(provider provider) *Service {
 	return &Service{
 		provider: provider,
 	}
@@ -54,7 +59,7 @@ func (s *Service) GetCustomer(ctx context.Context, req *customerpb.GetCustomerRe
 	}
 
 	return &customerpb.GetCustomerResponse{
-		Id:      customer.Id,
+		Id:      customer.ID,
 		Name:    customer.Name,
 		Email:   customer.Email,
 		Phone:   customer.Phone,
@@ -63,8 +68,39 @@ func (s *Service) GetCustomer(ctx context.Context, req *customerpb.GetCustomerRe
 }
 
 // ListCustomers returns a list of customers.
-func (s *Service) ListCustomersX(req *customerpb.ListCustomersRequest, stream grpc.ServerStreamingServer[customerpb.GetCustomerResponse]) error {
-	customers := s.provider.ListCustomers(context.Background(), req.Ids)
+func (s *Service) ListCustomers(req *customerpb.ListCustomersRequest, stream grpc.ServerStreamingServer[customerpb.GetCustomerResponse]) error {
+	customerChan, err := s.provider.StreamCustomers(context.Background(), req.Ids)
+	if err != nil {
+		return err
+	}
 
-	return nil
+	for {
+		select {
+		case customer, ok := <-customerChan:
+			if !ok { // Channel closed
+				return nil
+			}
+
+			address := customerpb.AddressResponse{
+				Street: customer.Address.Street,
+				City:   customer.Address.City,
+				State:  customer.Address.State,
+				Zip:    customer.Address.Zip,
+			}
+			c := customerpb.GetCustomerResponse{
+				Id:      customer.ID,
+				Name:    customer.Name,
+				Email:   customer.Email,
+				Phone:   customer.Phone,
+				Address: &address,
+			}
+
+			if err := stream.Send(&c); err != nil {
+				return status.Errorf(codes.Internal, "error sending customer: %v", err)
+			}
+		case <-stream.Context().Done():
+			// Handle client disconnects
+			return stream.Context().Err()
+		}
+	}
 }

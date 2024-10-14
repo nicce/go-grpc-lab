@@ -2,40 +2,50 @@ package customer
 
 import (
 	"context"
+	"math/rand"
+	"time"
+
 	"github.com/nicce/go-grpc-lab/customers"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"time"
 )
 
-type CustomerProvider struct {
+// MockProvider describes the MockProvider struct.
+type MockProvider struct {
 	customers []*customers.Customer
+	maxDelay  int
 }
 
-func New(customers []*customers.Customer) *CustomerProvider {
-	return &CustomerProvider{
+// New creates a new mock provider.
+func New(customers []*customers.Customer, maxDelay int) *MockProvider {
+	return &MockProvider{
 		customers: customers,
+		maxDelay:  maxDelay,
 	}
 }
 
-func (p *CustomerProvider) GetCustomer(_ context.Context, id string) (*customers.Customer, error) {
+// GetCustomer returns a customer by ID.
+func (p *MockProvider) GetCustomer(_ context.Context, id string) (*customers.Customer, error) {
 	for _, c := range p.customers {
-		if c.Id == id {
+		if c.ID == id {
 			return c, nil
 		}
 	}
 
-	return nil, status.Errorf(codes.NotFound, "customer not found") // TODO: proper error handling that later translates to a gRPC error
+	return nil, status.Errorf(codes.NotFound, "customer not found")
 }
 
-func (p *CustomerProvider) StreamCustomers(_ context.Context, ids []string) (<-chan *customers.Customer, error) {
+// StreamCustomers returns a channel of customers.
+func (p *MockProvider) StreamCustomers(_ context.Context, ids []string) (<-chan *customers.Customer, error) {
 	customerChan := make(chan *customers.Customer)
 
 	go func() {
 		for _, c := range p.customers {
 			if shouldSendCustomer(ids, c) {
 				customerChan <- c
-				time.Sleep(500 * time.Millisecond) // delay for simulation purposes
+
+				// delay for simulation purposes
+				time.Sleep(time.Duration(rand.Intn(p.maxDelay)) * time.Millisecond) //nolint:gosec
 			}
 		}
 
@@ -52,7 +62,7 @@ func shouldSendCustomer(ids []string, c *customers.Customer) bool {
 	}
 
 	for _, id := range ids {
-		if c.Id == id {
+		if c.ID == id {
 			return true
 		}
 	}

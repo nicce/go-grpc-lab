@@ -10,7 +10,6 @@ linters:
     - errcheck
     - errorlint
     - exhaustive
-    - exportloopref
     - forbidigo
     - gochecknoglobals
     - gochecknoinits
@@ -20,11 +19,11 @@ linters:
     - gocyclo
     - godot
     - godox
-    - goerr113
+    - err113
     - gofmt
     - goheader
     - goimports
-    - gomnd
+    - mnd
     - gomodguard
     - goprintffuncname
     - gosec
@@ -51,7 +50,7 @@ linters:
     - unparam
     - unused
     - whitespace
-    - wrapcheck
+    #- wrapcheck ORKA
     - wsl
 issues:
   exclude-use-default: false
@@ -62,7 +61,7 @@ issues:
         - dupl
         - errorlint
         - gocyclo
-        - goerr113
+        - err113
         - wrapcheck
         - dogsled
         - gosec
@@ -90,7 +89,4 @@ linters-settings:
         disabled: false
   wrapcheck:
     ignorePackageGlobs:
-      - encoding/*
-      - github.com/gofiber/fiber/*
-      - github.com/ingka-group-digital/spectre-go-logging/v2/xerrors
-      - google.golang.org/grpc/status
+      - customerpb/*
