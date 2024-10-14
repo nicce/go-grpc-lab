@@ -4,6 +4,7 @@ go 1.23.1
 
 require (
 	github.com/brianvoe/gofakeit/v7 v7.0.4
+	github.com/google/go-cmp v0.6.0
 	github.com/joho/godotenv v1.5.1
 	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.34.2
