@@ -1,11 +1,11 @@
 SHELL := /bin/bash
 
+REAL_ARCHITECTURE := $(shell uname -m)
 ARCHITECTURE := $(shell echo $(REAL_ARCHITECTURE) | sed "s/x86_64/amd64/g")
 CREATED := $(shell date +%Y-%m-%dT%T%z)
 GCP_PROJECT_ID ?= my-gcp-project-id
 GIT_REPO := $(shell git config --get remote.origin.url)
 OS := $(shell uname)
-REAL_ARCHITECTURE := $(shell uname -m)
 REPO_NAME := $(shell basename ${GIT_REPO} .git)
 SHORT_SHA := $(shell git rev-parse --short HEAD)
 TAG_NAME := $(shell git describe --exact-match --tags 2> /dev/null)
@@ -13,6 +13,10 @@ REVISION ?= $(if ${TAG_NAME},${TAG_NAME},${SHORT_SHA})
 
 DOCKER_REPOSITORY := europe-docker.pkg.dev/${GCP_PROJECT_ID}/images
 DOCKER_IMAGE := ${DOCKER_REPOSITORY}/${REPO_NAME}:${REVISION}
+
+GOTESTSUM_VERSION := 1.12.0
+GOTESTSUM_PATH := bin/gotestsum_v$(GOTESTSUM_VERSION)/gotestsum
+GOTESTSUM_URL := https://github.com/gotestyourself/gotestsum/releases/download/v$(GOTESTSUM_VERSION)/gotestsum_$(GOTESTSUM_VERSION)_$(OS)_$(ARCHITECTURE).tar.gz
 
 GOLANGCI_LINT_VERSION := v1.61.0
 GOLANGCI_LINT := bin/golangci-lint_$(GOLANGCI_LINT_VERSION)/golangci-lint
@@ -34,7 +38,6 @@ build: clean lint
 run: build
 	@echo "🚀 Running binary"
 	@./bin/${REPO_NAME}
-
 
 ## lint: Lint the source code
 lint: ${GOLANGCI_LINT}
@@ -81,6 +84,18 @@ docker-info:
 docker-publish:
 	@echo "🚀 Pushing docker image"
 	## @docker push ${DOCKER_IMAGE} skip until there is a real project
+
+## test: Run Go tests
+test: ${GOTESTSUM_PATH}
+	@echo "🚀 Running tests"
+	@set -o pipefail; ${GOTESTSUM_PATH} --format testname --no-color=false -- -race ./... | grep -v 'EMPTY'; exit $$?
+
+${GOTESTSUM_PATH}:
+	@echo "📦 Installing GoTestSum ${GOTESTSUM_VERSION}"
+	@mkdir -p $(dir ${GOTESTSUM_PATH})
+	@curl -sSL ${GOTESTSUM_URL} > bin/gotestsum.tar.gz
+	@tar -xzf bin/gotestsum.tar.gz -C $(patsubst %/,%,$(dir ${GOTESTSUM_PATH}))
+	@rm -f bin/gotestsum.tar.gz
 
 ${GOLANGCI_LINT}:
 	@echo "📦 Installing golangci-lint ${GOLANGCI_LINT_VERSION}"
