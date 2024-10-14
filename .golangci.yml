@@ -1,0 +1,96 @@
+---
+run:
+  timeout: 5m
+linters:
+  enable:
+    - asciicheck
+    - bodyclose
+    - dogsled
+    - dupl
+    - errcheck
+    - errorlint
+    - exhaustive
+    - exportloopref
+    - forbidigo
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - godox
+    - goerr113
+    - gofmt
+    - goheader
+    - goimports
+    - gomnd
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - makezero
+    - misspell
+    - nakedret
+    - nestif
+    - nlreturn
+    - noctx
+    - nolintlint
+    - paralleltest
+    - prealloc
+    - predeclared
+    - revive
+    - staticcheck
+    - testpackage
+    - thelper
+    - tparallel
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+    - wrapcheck
+    - wsl
+issues:
+  exclude-use-default: false
+  max-same-issues: 0
+  exclude-rules:
+    - path: _test.go
+      linters:
+        - dupl
+        - errorlint
+        - gocyclo
+        - goerr113
+        - wrapcheck
+        - dogsled
+        - gosec
+  exclude-files:
+    - ".*.gen.go"
+  exclude-dirs:
+    - bin
+    - cmd
+    - generated
+linters-settings:
+  dupl:
+    threshold: 200
+  exhaustive:
+    default-signifies-exhaustive: true
+  gosec:
+    excludes:
+      - G101
+  revive:
+    rules:
+      - name: package-comments
+        disabled: true
+      - name: exported
+        disabled: false
+      - name: var-naming
+        disabled: false
+  wrapcheck:
+    ignorePackageGlobs:
+      - encoding/*
+      - github.com/gofiber/fiber/*
+      - github.com/ingka-group-digital/spectre-go-logging/v2/xerrors
+      - google.golang.org/grpc/status

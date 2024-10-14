@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package customerpb;
+
+option go_package = "./customerpb";
+
+// The service definition.
+service CustomerService {
+
+  rpc GetCustomer(GetCustomerRequest) returns (GetCustomerResponse);
+  rpc ListCustomers(ListCustomersRequest) returns (stream GetCustomerResponse);
+}
+
+// The request message containing the name to greet.
+message GetCustomerRequest {
+  string id = 1;
+}
+
+message ListCustomersRequest {
+  repeated string ids = 1;
+}
+
+// The response message containing the greeting.
+message GetCustomerResponse {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  string phone = 4;
+  AddressResponse address = 5;
+}
+
+message AddressResponse {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+  string zip = 4;
+}
