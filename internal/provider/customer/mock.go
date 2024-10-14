@@ -2,9 +2,10 @@ package customer
 
 import (
 	"context"
-	"github.com/nicce/go-grpc-lab/internal/customers"
 	"math/rand"
 	"time"
+
+	"github.com/nicce/go-grpc-lab/internal/customers"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

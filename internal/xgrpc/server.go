@@ -1,11 +1,12 @@
 package xgrpc
 
 import (
+	"log"
+	"net"
+
 	customerpb2 "github.com/nicce/go-grpc-lab/api/gen/customerpb"
 	"github.com/nicce/go-grpc-lab/internal/customers"
 	"github.com/nicce/go-grpc-lab/internal/provider/customer"
-	"log"
-	"net"
 
 	"google.golang.org/grpc"
 )

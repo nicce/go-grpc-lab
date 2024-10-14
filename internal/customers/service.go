@@ -2,6 +2,7 @@ package customers
 
 import (
 	"context"
+
 	customerpb2 "github.com/nicce/go-grpc-lab/api/gen/customerpb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

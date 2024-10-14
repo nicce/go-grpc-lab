@@ -2,8 +2,9 @@ package environment
 
 import (
 	"context"
-	"github.com/nicce/go-grpc-lab/pkg/xenvironment"
 	"log"
+
+	"github.com/nicce/go-grpc-lab/pkg/xenvironment"
 )
 
 const (
