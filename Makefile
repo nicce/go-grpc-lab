@@ -20,6 +20,22 @@ GOLINTCI_URL := https://raw.githubusercontent.com/golangci/golangci-lint/master/
 
 all: help
 
+## clean: Clean up all build artifacts
+clean:
+	@echo "🚀 Cleaning up old artifacts"
+	@rm -f bin/${REPO_NAME}
+
+## build: Build the application artifacts. Linting can be skipped by setting env variable IGNORE_LINTING.
+build: clean lint
+	@echo "🚀 Building artifacts"
+	@go build -ldflags="-s -w" -o bin/${REPO_NAME} ./cmd/server
+
+## run: Run the application
+run: build
+	@echo "🚀 Running binary"
+	@./bin/${REPO_NAME}
+
+
 ## lint: Lint the source code
 lint: ${GOLANGCI_LINT}
 	@echo "🚀 Linting code"
