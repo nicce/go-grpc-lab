@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
+	"github.com/nicce/go-grpc-lab/internal/customers"
+	"github.com/nicce/go-grpc-lab/internal/environment"
+	"github.com/nicce/go-grpc-lab/internal/xgrpc"
 	"log"
-
-	"github.com/nicce/go-grpc-lab/customers"
-	"github.com/nicce/go-grpc-lab/environment"
-	"github.com/nicce/go-grpc-lab/server"
 
 	"github.com/brianvoe/gofakeit/v7"
 )
@@ -17,7 +16,7 @@ func main() {
 
 	log.Printf("Starting server with cfg: %+v\n", env)
 
-	s := server.New(server.Config{Port: env.Port, Customers: getMockCustomers(env.NumberOfCustomers), MaxDelayInMilliseconds: env.MaxDelayInMilliseconds})
+	s := xgrpc.New(xgrpc.Config{Port: env.Port, Customers: getMockCustomers(env.NumberOfCustomers), MaxDelayInMilliseconds: env.MaxDelayInMilliseconds})
 	if err := s.Serve(); err != nil {
 		log.Fatal(err)
 	}

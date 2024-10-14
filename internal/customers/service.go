@@ -2,8 +2,7 @@ package customers
 
 import (
 	"context"
-
-	"github.com/nicce/go-grpc-lab/customerpb"
+	customerpb2 "github.com/nicce/go-grpc-lab/api/gen/customerpb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -12,7 +11,7 @@ import (
 // Service a customer service.
 type Service struct {
 	provider provider
-	customerpb.UnimplementedCustomerServiceServer
+	customerpb2.UnimplementedCustomerServiceServer
 }
 
 // Customer describes the Customer struct.
@@ -45,20 +44,20 @@ func New(provider provider) *Service {
 }
 
 // GetCustomer returns a customer by ID.
-func (s *Service) GetCustomer(ctx context.Context, req *customerpb.GetCustomerRequest) (*customerpb.GetCustomerResponse, error) {
+func (s *Service) GetCustomer(ctx context.Context, req *customerpb2.GetCustomerRequest) (*customerpb2.GetCustomerResponse, error) {
 	customer, err := s.provider.GetCustomer(ctx, req.GetId())
 	if err != nil {
 		return nil, err
 	}
 
-	address := customerpb.AddressResponse{
+	address := customerpb2.AddressResponse{
 		Street: customer.Address.Street,
 		City:   customer.Address.City,
 		State:  customer.Address.State,
 		Zip:    customer.Address.Zip,
 	}
 
-	return &customerpb.GetCustomerResponse{
+	return &customerpb2.GetCustomerResponse{
 		Id:      customer.ID,
 		Name:    customer.Name,
 		Email:   customer.Email,
@@ -68,7 +67,7 @@ func (s *Service) GetCustomer(ctx context.Context, req *customerpb.GetCustomerRe
 }
 
 // ListCustomers returns a list of customers.
-func (s *Service) ListCustomers(req *customerpb.ListCustomersRequest, stream grpc.ServerStreamingServer[customerpb.GetCustomerResponse]) error {
+func (s *Service) ListCustomers(req *customerpb2.ListCustomersRequest, stream grpc.ServerStreamingServer[customerpb2.GetCustomerResponse]) error {
 	customerChan, err := s.provider.StreamCustomers(context.Background(), req.Ids)
 	if err != nil {
 		return err
@@ -81,13 +80,13 @@ func (s *Service) ListCustomers(req *customerpb.ListCustomersRequest, stream grp
 				return nil
 			}
 
-			address := customerpb.AddressResponse{
+			address := customerpb2.AddressResponse{
 				Street: customer.Address.Street,
 				City:   customer.Address.City,
 				State:  customer.Address.State,
 				Zip:    customer.Address.Zip,
 			}
-			c := customerpb.GetCustomerResponse{
+			c := customerpb2.GetCustomerResponse{
 				Id:      customer.ID,
 				Name:    customer.Name,
 				Email:   customer.Email,

@@ -40,7 +40,7 @@ generate-proto: generate-proto-server-code
 ## generate-proto-server-code: Generate server code from proto files
 generate-proto-server-code:
 	@echo "🚀 Generating server code from proto files"
-	@protoc --go_out=api/. --go-grpc_out=api/. proto/customer.proto
+	@protoc --go_out=api/gen/. --go-grpc_out=api/gen/. api/proto/customer.proto
 
 ## docker: Build and publishes the docker image
 docker: docker-build docker-publish docker-info
