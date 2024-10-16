@@ -4,7 +4,7 @@ import (
 	"log"
 	"net"
 
-	customerpb2 "github.com/nicce/go-grpc-lab/api/gen/customerpb"
+	"github.com/nicce/go-grpc-lab/api/gen/customerpb"
 	"github.com/nicce/go-grpc-lab/internal/customers"
 	"github.com/nicce/go-grpc-lab/internal/provider/customer"
 
@@ -35,7 +35,7 @@ func New(cfg Config) *Server {
 
 	grpcServer := grpc.NewServer()
 	customerService := customers.New(customerProvider)
-	customerpb2.RegisterCustomerServiceServer(grpcServer, customerService)
+	customerpb.RegisterCustomerServiceServer(grpcServer, customerService)
 
 	return &Server{
 		grpcServer: grpcServer,
