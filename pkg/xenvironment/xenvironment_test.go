@@ -2,10 +2,11 @@
 package xenvironment_test
 
 import (
-	"github.com/nicce/go-grpc-lab/pkg/xenvironment"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/nicce/go-grpc-lab/pkg/xenvironment"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -340,6 +341,7 @@ func TestShouldReturnErrorOnUnsupportedValueType(t *testing.T) {
 
 		t.Run(testcase.name, func(t *testing.T) {
 			_ = os.Setenv("STUFFS", testcase.name)
+
 			err := xenvironment.GetEnvironment(testcase.value)
 			if err == nil {
 				t.Errorf("Expected the returned error to be ErrUnsupportedEnvironmentType but got nil")

@@ -2,23 +2,26 @@ package customers_test
 
 import (
 	"context"
-	"github.com/nicce/go-grpc-lab/api/gen/customerpb"
-	"github.com/nicce/go-grpc-lab/internal/customers"
-	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net"
 	"testing"
+
+	"github.com/nicce/go-grpc-lab/api/gen/customerpb"
+	"github.com/nicce/go-grpc-lab/internal/customers"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 )
 
+const bufSize = 1024 * 1024
+
 type mockProvider struct {
-	// should have a list of mock data provided
+	lis *bufconn.Listener
 }
 
-func (m *mockProvider) GetCustomer(ctx context.Context, id string) (*customers.Customer, error) {
+func (provider *mockProvider) GetCustomer(ctx context.Context, id string) (*customers.Customer, error) {
 	return &customers.Customer{
 		ID:      "1",
 		Name:    "John Doe",
@@ -28,7 +31,7 @@ func (m *mockProvider) GetCustomer(ctx context.Context, id string) (*customers.C
 	}, nil
 }
 
-func (m *mockProvider) StreamCustomers(ctx context.Context, ids []string) (<-chan *customers.Customer, error) {
+func (provider *mockProvider) StreamCustomers(ctx context.Context, ids []string) (<-chan *customers.Customer, error) {
 	customerChan := make(chan *customers.Customer)
 	defer close(customerChan)
 
@@ -43,16 +46,10 @@ func (m *mockProvider) StreamCustomers(ctx context.Context, ids []string) (<-cha
 	return customerChan, nil
 }
 
-const bufSize = 1024 * 1024
-
-var lis *bufconn.Listener
-
-func init() {
-	lis = bufconn.Listen(bufSize)
-}
-
-func bufDialer(context.Context, string) (net.Conn, error) {
-	return lis.Dial()
+func newMockProvider() *mockProvider {
+	return &mockProvider{
+		lis: bufconn.Listen(bufSize),
+	}
 }
 
 func startTestGRPCServer(provider *mockProvider) *grpc.Server {
@@ -62,16 +59,19 @@ func startTestGRPCServer(provider *mockProvider) *grpc.Server {
 	customerpb.RegisterCustomerServiceServer(s, customerGRPCService)
 
 	go func() {
-		if err := s.Serve(lis); err != nil {
+		if err := s.Serve(provider.lis); err != nil {
 			panic("Server failed to start: " + err.Error())
 		}
 	}()
+
 	return s
 }
 
 func TestGetCustomer_Success(t *testing.T) {
+	t.Parallel()
+
 	// Create a mock provider
-	provider := &mockProvider{}
+	provider := newMockProvider()
 
 	// Start the gRPC server with the mock provider
 	server := startTestGRPCServer(provider)
@@ -79,7 +79,13 @@ func TestGetCustomer_Success(t *testing.T) {
 
 	// Create a connection using bufcon
 	ctx := context.Background()
-	conn, err := grpc.NewClient("passthrough://bufnet", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	conn, err := grpc.NewClient(
+		"passthrough://bufnet",
+		grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
+			return provider.lis.Dial()
+		}),
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	defer func(conn *grpc.ClientConn) {
 		err := conn.Close()
 		if err != nil {
