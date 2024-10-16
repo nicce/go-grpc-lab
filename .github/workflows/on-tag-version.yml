@@ -1,0 +1,32 @@
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+name: On-Tag-Version
+
+concurrency: plan-and-apply
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+
+jobs:
+  Pre-Release-Delete:
+    name: Pre-Release-Delete
+    uses: ./.github/workflows/pre-release-delete.yml
+    secrets: inherit
+  Terraform-Apply:
+    name: Terraform-Apply
+    uses: ./.github/workflows/terraform-apply.yml
+    secrets: inherit
+    with:
+      environment: dev
+  Pre-Release-Create:
+    name: Release
+    uses: ./.github/workflows/release.yml
+    needs: [Terraform-Apply, Pre-Release-Delete]
+    secrets: inherit
+    with:
+      prerelease: true

@@ -1,0 +1,65 @@
+# This workflow applies a terraform plan.
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      ref_name:
+        required: false
+        type: string
+        default: ${{ github.ref_name }}
+
+name: Terraform-Apply
+
+env:
+  TF_PLAN: ${{ inputs.environment }}-${{ inputs.ref_name }}-tfplan
+
+  # If set to "false" or "0", causes terraform commands to behave as if the
+  # -input=false flag was specified.
+  TF_INPUT: false
+
+jobs:
+  Terraform-Apply:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      # Setup private module access
+      #- name: Private module access
+      #  run: |
+      #    git config --global url."https://${{ secrets.ACCESS_TOKEN }}@github.com".insteadOf ssh://git@github.com
+
+      # Exchange OpenID Connect token with a Google Cloud Platform service account token
+      #- name: Acquire Google Cloud Platform token
+      #  id: auth
+      #  uses: google-github-actions/auth@62cf5bd3e4211a0a0b51f2c6d6a37129d828611d # v2.1.5
+      #  with:
+      #    create_credentials_file: true
+      #    workload_identity_provider: <workload-identity-provider>
+      #    service_account: <service-account>
+
+      # Terraform Setup
+      - name: Terraform Setup
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.6.3"
+
+      - name: Download terraform plan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # run: gh run download --name ${{ env.TF_PLAN }} --dir ${{ github.workspace }}
+        run: echo "🚀 Download terraform plan"
+
+      - name: Terraform apply
+        env:
+          NO_VARS: true
+        #run: |
+        #  ./scripts/terraform.sh ${{ inputs.environment }} apply \
+        #    -auto-approve \
+        #    ${{ github.workspace }}/${{ env.TF_PLAN }}
+        run: echo "🚀 Terraform apply"

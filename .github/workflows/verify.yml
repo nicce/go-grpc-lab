@@ -1,0 +1,53 @@
+# This workflow verifies the code by linting and testing.
+
+on:
+  workflow_call:
+
+name: Verify
+
+jobs:
+  Verify:
+    runs-on: ubuntu-latest
+    steps:
+      # Setup environment
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.ACCESS_TOKEN }}
+
+      - name: Install Go
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          cache: true
+          go-version-file: 'go.mod'
+
+      # Setup private Go module access
+      #- name: Private module access
+      #  run: |
+      #    git config \
+      #      --global \
+      #      url."<https-with-token-url>".insteadOf "<https-url>"
+
+      # Handle caching of tools
+      - name: Tools (cache)
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: |
+            bin/
+          key: ${{ runner.os }}-tools-${{ hashFiles('Makefile') }}
+
+      # Run hygiene controls
+      - name: Lint commits
+        run: make lint-conventional-commits
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
+
+      - name: Lint (run)
+        run: make lint
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+
+      - name: Test
+        run: make test

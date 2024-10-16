@@ -1,0 +1,26 @@
+# This workflow creates a semantic version tag using conventional commits.
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+name: Tag
+
+jobs:
+  Tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create tag
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea #v7.0.1
+        with:
+          github-token: ${{ secrets.ACCESS_TOKEN }}
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ inputs.version }}',
+              sha: context.sha
+            })

@@ -1,0 +1,20 @@
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+name: On-Pull-Request
+
+jobs:
+  Verify:
+    name: Verify
+    uses: ./.github/workflows/verify.yml
+    secrets: inherit
+  Dependabot:
+    name: Dependabot
+    needs: Verify
+    uses: ./.github/workflows/dependabot.yml
+    secrets: inherit
+  Terraform-Plan-Comment:
+    name: Terraform-Plan-Comment
+    uses: ./.github/workflows/terraform-plan-comment.yml
+    secrets: inherit
