@@ -1,0 +1,77 @@
+# This workflow creates a terraform plan for each environment and upload them as artifacts.
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+name: Terraform-Plan
+
+env:
+  # If set to "false" or "0", causes terraform commands to behave as if the
+  # -input=false flag was specified.
+  TF_INPUT: false
+
+jobs:
+  terraform-plan:
+    environment: ${{ matrix.env.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        env:
+          - { name: dev }
+
+    steps:
+      # Setup environment
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          ref: ${{ github.sha }}
+
+      # Setup private module access
+      #- name: Private module access
+      #  run: |
+      #    git config --global url."https://${{ secrets.ACCESS_TOKEN }}@github.com".insteadOf ssh://git@github.com
+
+      # Exchange OpenID Connect token with a Google Cloud Platform service account token
+      #- name: Acquire Google Cloud Platform token
+      #  id: auth
+      #  uses: google-github-actions/auth@62cf5bd3e4211a0a0b51f2c6d6a37129d828611d # v2.1.5
+      #  with:
+      #    create_credentials_file: true
+      #    workload_identity_provider: <workload-identity-provider>
+      #    service_account: <service-account>
+
+      # Terraform Setup
+      - name: Terraform Setup
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.6.3"
+
+      # Docker Info
+      - name: Docker Info
+        id: docker-info
+        run: echo "image-name=$(make docker-info)" >> "$GITHUB_OUTPUT"
+        env:
+          REVISION: ${{ inputs.version }}
+
+      - name: Terraform plan
+        id: terraform-plan
+        run: echo "🚀 Terraform plan"
+        #run: |
+        #  mkdir -p ${{ github.workspace }}/plans
+        #  ./scripts/terraform.sh ${{ matrix.env.name }} plan \
+        #    -var image_ref=${{ steps.docker-info.outputs.image-name }} \
+        #    -no-color \
+        #    -out=${{ github.workspace }}/plans/${{ matrix.env.name }}-${{ inputs.version }}-tfplan
+
+      - name: Upload terraform plan
+        run: echo "🚀 Upload terraform plan"
+        #uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        #with:
+        #  name: ${{ matrix.env.name }}-${{ inputs.version }}-tfplan
+        #  path: ${{ github.workspace }}/plans/${{ matrix.env.name }}-${{ inputs.version }}-tfplan
+        #  retention-days: 30

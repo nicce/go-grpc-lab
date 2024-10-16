@@ -1,0 +1,30 @@
+# This workflow fetches the version that will be created for the specific commit.
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        value: ${{ jobs.Version.outputs.version }}
+        description: "The semantic version tag that will be created for the specific commit."
+
+name: Version
+
+jobs:
+  Version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.semantic-version.outputs.version }}
+    steps:
+      # Setup environment
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0 # Checkout everything to get access to the tags
+          ref: ${{ github.sha }}
+
+      - name: Get version
+        id: semantic-version
+        run: echo "version=$(scripts/conventional-commits/version.sh)" >> "$GITHUB_OUTPUT"
+
+      - name: Print version
+        run: echo "Set version to ${{ steps.semantic-version.outputs.version }}"

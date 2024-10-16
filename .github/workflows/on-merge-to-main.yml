@@ -1,0 +1,44 @@
+on:
+  push:
+    branches:
+      - main
+    tags-ignore:
+      - '**'
+
+name: On-Merge-To-Main
+
+concurrency: plan-and-apply
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  Version:
+    name: Version
+    uses: ./.github/workflows/version.yml
+    secrets: inherit
+  Docker:
+    name: Docker
+    needs: Version
+    if: ${{ needs.Version.outputs.version != '' }}
+    uses: ./.github/workflows/docker.yml
+    secrets: inherit
+    with:
+      version: ${{ needs.Version.outputs.version }}
+  Terraform-Plan:
+    name: Terraform-Plan
+    needs: Version
+    if: ${{ needs.Version.outputs.version != '' }}
+    uses: ./.github/workflows/terraform-plan.yml
+    secrets: inherit
+    with:
+      version: ${{ needs.Version.outputs.version }}
+  Tag:
+    name: Create Tag
+    needs: [Version, Docker, Terraform-Plan]
+    if: ${{ needs.Version.outputs.version != '' }}
+    uses: ./.github/workflows/tag.yml
+    secrets: inherit
+    with:
+      version: ${{ needs.Version.outputs.version }}

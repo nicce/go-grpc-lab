@@ -1,0 +1,20 @@
+on:
+  release:
+    types: [released]
+
+name: On-Release
+
+concurrency: plan-and-apply
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+
+jobs:
+  Terraform-Apply:
+    name: Terraform-Apply
+    uses: ./.github/workflows/terraform-apply.yml
+    secrets: inherit
+    with:
+      environment: prod

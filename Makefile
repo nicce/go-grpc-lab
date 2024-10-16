@@ -11,6 +11,10 @@ SHORT_SHA := $(shell git rev-parse --short HEAD)
 TAG_NAME := $(shell git describe --exact-match --tags 2> /dev/null)
 REVISION ?= $(if ${TAG_NAME},${TAG_NAME},${SHORT_SHA})
 
+ACTIONLINT_VERSION := 1.6.27
+ACTIONLINT_PATH := bin/actionlint_v$(ACTIONLINT_VERSION)/actionlint
+ACTIONLINT_URL :=  https://github.com/rhysd/actionlint/releases/download/v$(ACTIONLINT_VERSION)/actionlint_$(ACTIONLINT_VERSION)_$(OS)_$(ARCHITECTURE).tar.gz
+
 DOCKER_REPOSITORY := europe-docker.pkg.dev/${GCP_PROJECT_ID}/images
 DOCKER_IMAGE := ${DOCKER_REPOSITORY}/${REPO_NAME}:${REVISION}
 
@@ -21,6 +25,10 @@ GOTESTSUM_URL := https://github.com/gotestyourself/gotestsum/releases/download/v
 GOLANGCI_LINT_VERSION := v1.61.0
 GOLANGCI_LINT := bin/golangci-lint_$(GOLANGCI_LINT_VERSION)/golangci-lint
 GOLINTCI_URL := https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
+
+SHELLCHECK_VERSION := 0.9.0
+SHELLCHECK_PATH := bin/shellcheck-v$(SHELLCHECK_VERSION)/shellcheck
+SHELLCHECK_URL := https://github.com/koalaman/shellcheck/releases/download/v$(SHELLCHECK_VERSION)/shellcheck-v$(SHELLCHECK_VERSION).$(OS).x86_64.tar.xz
 
 all: help
 
@@ -44,9 +52,27 @@ lint: ${GOLANGCI_LINT}
 	@echo "🚀 Linting code"
 	@$(GOLANGCI_LINT) run
 
+## lint-conventional-commits: checks the commits to ensure they follow the conventional commits format
+lint-conventional-commits:
+	@echo "🚀 Checking commits"
+	@source "scripts/conventional-commits/branch.sh"
+
 lint-fix: ${GOLANGCI_LINT}
 	@echo "🚀 Linting code and fixing issues"
 	@$(GOLANGCI_LINT) run --fix
+
+## lint-github-actions: Lint the GitHub actions code
+lint-github-actions: ${ACTIONLINT_PATH} ${SHELLCHECK_PATH}
+	@echo "🚀 Linting GitHub actions code"
+	@$(ACTIONLINT_PATH) -shellcheck=${SHELLCHECK_PATH}
+
+## lint-github-actions-info: Returns information about the current GitHub actions linter being used
+lint-github-actions-info:
+	@echo ${ACTIONLINT_PATH}
+
+## lint-shellcheck-info: Returns information about the current Shellcheck linter being used
+lint-shellcheck-info:
+	@echo ${SHELLCHECK_PATH}
 
 ## test-benchmark: Run Go benchmark tests
 test-benchmark:
@@ -90,6 +116,13 @@ test: ${GOTESTSUM_PATH}
 	@echo "🚀 Running tests"
 	@set -o pipefail; ${GOTESTSUM_PATH} --format testname --no-color=false -- -race ./... | grep -v 'EMPTY'; exit $$?
 
+${ACTIONLINT_PATH}:
+	@echo "📦 Installing actionlint ${ACTIONLINT_VERSION}"
+	@mkdir -p $(dir ${ACTIONLINT_PATH})
+	@curl -sSL ${ACTIONLINT_URL} > bin/actionlint.tar.gz
+	@tar -xzf bin/actionlint.tar.gz -C $(patsubst %/,%,$(dir ${ACTIONLINT_PATH}))
+	@rm -f bin/actionlint.tar.gz
+
 ${GOTESTSUM_PATH}:
 	@echo "📦 Installing GoTestSum ${GOTESTSUM_VERSION}"
 	@mkdir -p $(dir ${GOTESTSUM_PATH})
@@ -101,6 +134,13 @@ ${GOLANGCI_LINT}:
 	@echo "📦 Installing golangci-lint ${GOLANGCI_LINT_VERSION}"
 	@mkdir -p $(dir ${GOLANGCI_LINT})
 	@curl -sfL ${GOLINTCI_URL} | sh -s -- -b ./$(patsubst %/,%,$(dir ${GOLANGCI_LINT})) ${GOLANGCI_LINT_VERSION} > /dev/null 2>&1
+
+${SHELLCHECK_PATH}:
+	@echo "📦 Installing Shellcheck ${SHELLCHECK_VERSION}"
+	@mkdir -p $(dir ${SHELLCHECK_PATH})
+	@curl -sSL ${SHELLCHECK_URL} > bin/shellcheck.tar.xz
+	@tar -xJf bin/shellcheck.tar.xz -C bin/
+	@rm -f bin/shellcheck.tar.xz
 
 help: Makefile
 	@echo

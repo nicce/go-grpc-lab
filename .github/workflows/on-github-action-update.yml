@@ -1,0 +1,48 @@
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/*.yml'
+
+name: On-Github-Action-Update
+
+jobs:
+  Lint:
+    runs-on: ubuntu-latest
+    steps:
+      # Setup environment
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v3.3.0
+        with:
+          fetch-depth: ${{ github.event.pull_request.commits }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.ACCESS_TOKEN }}
+
+      # Setup Shellcheck
+      - name: Shellcheck linter (info)
+        id: shellcheck-linter
+        run: echo "version=$(make lint-shellcheck-info)" >> "$GITHUB_OUTPUT"
+
+      - name: Shellcheck linter (cache)
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: |
+            ${{ steps.shellcheck-linter.outputs.version }}
+          key: ${{ runner.os }}-shellcheck-linter-${{ steps.shellcheck-linter.outputs.version }}
+
+      # Setup GitHub Actions linter
+      - name: GitHub Actions linter (info)
+        id: github-actions-linter
+        run: echo "version=$(make lint-github-actions-info)" >> "$GITHUB_OUTPUT"
+
+      - name: GitHub Actions linter (cache)
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: |
+            ${{ steps.github-actions-linter.outputs.version }}
+          key: ${{ runner.os }}-github-actions-linter-${{ steps.github-actions-linter.outputs.version }}
+
+      # Run GitHub Actions linter
+      - name: Lint GitHub Actions code
+        run: make lint-github-actions

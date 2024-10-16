@@ -1,0 +1,53 @@
+# This workflow builds and publishes a Docker image to a Docker Registry.
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+name: Docker
+
+jobs:
+  Docker:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        env:
+          - { name: dev }
+    environment: ${{ matrix.env.name }}
+    steps:
+      # Setup environment
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          ref: ${{ github.sha }}
+
+      # Exchange OpenID Connect token with a Google Cloud Platform service account token
+      #- name: Acquire Google Cloud Platform token
+      #  id: auth
+      #  uses: google-github-actions/auth@62cf5bd3e4211a0a0b51f2c6d6a37129d828611d # v2.1.5
+      #  with:
+      #    create_credentials_file: true
+      #    workload_identity_provider: <workload-identity-provider>
+      #    service_account: <service-account-email>
+
+      # Authenticate against Google Cloud Platform
+      #- name: Setup authentication
+      #  run: |-
+      #    gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+      #    gcloud auth configure-docker europe-docker.pkg.dev
+
+      # Build Docker image
+      - name: Build
+        run: make docker-build
+        env:
+          REVISION: ${{ inputs.version }}
+
+      # Push Docker image
+      - name: Publish
+        run: make docker-publish
+        env:
+          REVISION: ${{ inputs.version }}
