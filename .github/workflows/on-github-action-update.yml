@@ -25,7 +25,7 @@ jobs:
         run: echo "version=$(make lint-shellcheck-info)" >> "$GITHUB_OUTPUT"
 
       - name: Shellcheck linter (cache)
-        uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8 # v4.1.1
+        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
         with:
           path: |
             ${{ steps.shellcheck-linter.outputs.version }}
@@ -37,7 +37,7 @@ jobs:
         run: echo "version=$(make lint-github-actions-info)" >> "$GITHUB_OUTPUT"
 
       - name: GitHub Actions linter (cache)
-        uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8 # v4.1.1
+        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
         with:
           path: |
             ${{ steps.github-actions-linter.outputs.version }}
