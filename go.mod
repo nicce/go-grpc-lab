@@ -1,13 +1,12 @@
 module github.com/nicce/go-grpc-lab
 
 go 1.23.1
-
 require (
 	github.com/brianvoe/gofakeit/v7 v7.2.1
 	github.com/google/go-cmp v0.7.0
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.6
 )
 
