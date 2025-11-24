@@ -1,9 +1,9 @@
 module github.com/nicce/go-grpc-lab
 
-go 1.23.1
+go 1.25
 
 require (
-	github.com/brianvoe/gofakeit/v7 v7.9.0
+	github.com/brianvoe/gofakeit/v7 v7.11.0
 	github.com/google/go-cmp v0.7.0
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.11.1
