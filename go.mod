@@ -1,20 +1,20 @@
 module github.com/nicce/go-grpc-lab
 
-go 1.23.1
+go 1.25.0
 
 require (
 	github.com/brianvoe/gofakeit/v7 v7.15.0
 	github.com/google/go-cmp v0.7.0
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.12.1
-	google.golang.org/grpc v1.75.1
+	google.golang.org/grpc v1.83.0
 	google.golang.org/protobuf v1.36.12
 )
 
 require (
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/net v0.41.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.26.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
+	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 )
